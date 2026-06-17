@@ -1,0 +1,78 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: am-ai-portfolio-app-prepub
+  namespace: _namespace_
+  labels:
+    app: am-ai-portfolio-app-prepub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: am-ai-portfolio-app-prepub
+  template:
+    metadata:
+      labels:
+        app: am-ai-portfolio-app-prepub
+    spec:
+      volumes:
+        - name: lang-fast-prepub-conf
+          configMap:
+            name: lang-fast-prepub-conf
+            optional: false
+            items:
+              - key: .env
+                path: .env
+              - key: logging.yaml
+                path: logging.yaml
+      containers:
+        - name: am-ai-portfolio-app-prepub
+          image: >-
+            dockerhub.citicsinfo.com/_namespace_/am-ai-portfolio-app-prepub:_tag_
+          ports:
+            - containerPort: 8501
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '2'
+              memory: 4Gi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          volumeMounts:
+            - name: lang-fast-prepub-conf
+              mountPath: /app/.env
+              subPath: .env
+            - name: lang-fast-prepub-conf
+              mountPath: /app/logging.yaml
+              subPath: logging.yaml
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: am-ai-portfolio-app-prepub-svc
+  namespace: _namespace_
+  annotations:
+    ovn.kubernetes.io/vpc: ovn-cluster
+spec:
+  ports:
+    - protocol: TCP
+      port: 8501
+      targetPort: 8501
+  selector:
+    app: am-ai-portfolio-app-prepub
+  type: ClusterIP
+  sessionAffinity: None
