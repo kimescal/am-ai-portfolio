@@ -16,4 +16,5 @@ def get_model(model_name: str):
         streaming=True,
         openai_api_base=settings.COMPATIBLE_BASE_URL,
         openai_api_key=settings.COMPATIBLE_API_KEY,
+        default_headers={"userid": "022964"},
     )
